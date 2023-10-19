@@ -53,8 +53,8 @@ while True :
     is_off_hook = hangup_pin.value() == 0
     toggle = is_off_hook != previous_state
     if is_off_hook and toggle:
-        print('Pick Up!') # Ajouter un delay ?
-        df.play(1,1)
+        print('Pick Up!') 
+        df.play(99,1) # Problème pour activer le repeat
     elif not is_off_hook and toggle:
         print('Hang Up..')
         df.stop()
@@ -63,5 +63,6 @@ while True :
     rotary_value = rotary()
     if rotary_value :
         print(rotary_value)
+        df.play(rotary_value, 1)
     utime.sleep_ms(250)
 
