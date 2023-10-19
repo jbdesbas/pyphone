@@ -28,8 +28,23 @@ print('MAC :', mac)
 
 df=DFPlayer(uart_id=1) # D4
 
+hangup_pin=Pin(5,Pin.IN, Pin.PULL_UP) # D1
+
+
+previous_state = False
+
 while True :
-    do_connect(WIFI_SSID, WIFI_PASSWORD)      
-    #df.play(1,int(getrandbits(1))+1)
-    utime.sleep(60)
+    #do_connect(WIFI_SSID, WIFI_PASSWORD)      
+
+    is_off_hook = hangup_pin.value() == 0
+    toggle = is_off_hook != previous_state
+    if is_off_hook and toggle:
+        print('Pick Up!') # Ajouter un delay ?
+        df.play(1,1)
+    elif not is_off_hook and toggle:
+        print('Hang Up..')
+        df.stop()
+    #print(is_off_hook)
+    previous_state = is_off_hook
+    utime.sleep_ms(250)
 
