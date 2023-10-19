@@ -28,10 +28,24 @@ print('MAC :', mac)
 
 df=DFPlayer(uart_id=1) # D4
 
-hangup_pin=Pin(5,Pin.IN, Pin.PULL_UP) # D1
-
+hangup_pin = Pin(5,Pin.IN, Pin.PULL_UP) # D1
+rotary1_pin = Pin(14, Pin.IN, Pin.PULL_UP) # D5
+rotary2_pin = Pin(12, Pin.IN, Pin.PULL_UP) # D6
 
 previous_state = False
+
+def rotary():
+    i = 0
+    previous_value = None
+    while True:
+        if rotary1_pin.value() == 0:
+            value = rotary2_pin.value()
+            if value == 1 and previous_value != value:
+                i+=1
+            previous_value = value
+            utime.sleep_ms(10)
+        else:
+            return None if i == 0 else i
 
 while True :
     #do_connect(WIFI_SSID, WIFI_PASSWORD)      
@@ -46,5 +60,8 @@ while True :
         df.stop()
     #print(is_off_hook)
     previous_state = is_off_hook
+    rotary_value = rotary()
+    if rotary_value :
+        print(rotary_value)
     utime.sleep_ms(250)
 
