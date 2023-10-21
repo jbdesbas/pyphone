@@ -20,6 +20,11 @@ def do_connect(ssid,pwd):
             pass
     print('network config:', sta_if.ifconfig())
 
+
+
+wlan = network.WLAN(network.STA_IF)
+wlan.active(False) # No wifi needed
+
 rtc = RTC()
 
 mac = ubinascii.hexlify(network.WLAN().config('mac'),':').decode() #client id ?
