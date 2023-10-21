@@ -24,12 +24,15 @@ Le cadran permet de choisir la piste à lire.
 
 ## Montage
 
-NodeMCU D1 : Combiné (0V si décroché, PULLUP si raccroché)
-NodeMCU D4 : RX DFPlayer (Transmission de commande lecture/stop)
-NodeMCU D5 : Cadran fil bleu (cf. infra) - Indique si on touche le cadran
-NodeMCU D6 : Cadran fil rouge (cf. infra) - Renvoi les impulsions quand le cadran est relaché
+NodeMCU **D1** : Combiné (0V si décroché, PULLUP si raccroché)
 
-DFPlayer DAC_L : Haut-parleur du combiné, fil bleu clair (ajouter une resistance pour atténuer le volume).
+NodeMCU **D4** : **RX** DFPlayer (Transmission de commande lecture/stop)
+
+NodeMCU **D5** : Cadran fil bleu (cf. infra) - Indique si on touche le cadran
+
+NodeMCU **D6** : Cadran fil rouge (cf. infra) - Renvoi les impulsions quand le cadran est relaché
+
+DFPlayer **DAC_L** : Haut-parleur du combiné, fil bleu clair (ajouter une resistance pour atténuer le volume).
 
 Ne pas oublier la **masse** pour le nodeMCU, DFPlayer, Haut-parleur (fil rouge (!)) et cadran (fils bleu-blanc et rouge-blanc).
 
