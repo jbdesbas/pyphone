@@ -39,6 +39,7 @@ rotary2_pin = Pin(12, Pin.IN, Pin.PULL_UP) # D6
 
 previous_state = False
 
+
 def rotary():
     i = 0
     previous_value = None
@@ -59,7 +60,7 @@ while True :
     toggle = is_off_hook != previous_state
     if is_off_hook and toggle:
         print('Pick Up!') 
-        df.play(99,1) # Problème pour activer le repeat
+        df.send_cmd(0x17,0x00, 99) # Loop folder 99. CF https://cahamo.delphidabbler.com/resources/dfplayer-mini
     elif not is_off_hook and toggle:
         print('Hang Up..')
         df.stop()
