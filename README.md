@@ -8,8 +8,10 @@ Le cadran permet de choisir la piste à lire.
 
 ### Hardware
 
+
 - ESP8266-12F (Nodemcu) flashée avec [MicroPython](https://micropython.org)
 - [DFPlayer mini](https://wiki.dfrobot.com/DFPlayer_Mini_SKU_DFR0299) + carte Micro SD
+
 
 ### Software
 
@@ -17,9 +19,45 @@ Le cadran permet de choisir la piste à lire.
 - ampy pour uploader le code (`ampy --port /dev/ttyUSB0 put pyphone/main.py`)
 - picocom pour accéder au REPL via le port série ( `picocom /dev/ttyUSB0 -b 115200`)
 
+
 ## Montage
 
-Coming soon..
+NodeMCU D1 : Combiné (0V si décroché, PULLUP si raccroché)
+NodeMCU D4 : RX DFPlayer (Transmission de commande lecture/stop)
+NodeMCU D5 : Cadran fil bleu (cf. infra) - Indique si on touche le cadran
+NodeMCU D6 : Cadran fil rouge (cf. infra) - Renvoi les impulsions quand le cadran est relaché
+
+DFPlayer DAC_L : Haut-parleur du combiné, fil bleu clair (ajouter une resistance pour atténuer le volume).
+
+Ne pas oublier la **masse** pour le nodeMCU, DFPlayer, Haut-parleur (fil rouge (!)) et cadran (fils bleu-blanc et rouge-blanc).
+
+## Carde SD
+
+Arborescence : 
+
+Les répertoires 001 à 010 correspondent au numéro choisi sur le cadran (`010` pour le zéro).
+Le répartoire `099` est lu en boucle lorsque le combiné est décroché (tonalité d'attente).
+
+Seul le canal gauche est envoyé au combiné.
+
+```
+.
+├── 001/
+│   ├── 001_title.mp3
+│   ├── 002_title.mp3
+│   └── 003_title.mp3
+├── 002/
+│   ├── 001_title.mp3
+│   ├── 002_title.mp3
+│   └── 003_title.mp3
+├── ...
+├── 010/
+│   ├── 001_title.mp3
+│   ├── 002_title.mp3
+│   └── 003_title.mp3
+└── 099/
+    └── 001_waiting_tone.mp3
+```
 
 ## Cadran
 
