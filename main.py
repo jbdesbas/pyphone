@@ -39,6 +39,20 @@ rotary2_pin = Pin(12, Pin.IN, Pin.PULL_UP) # D6
 
 previous_state = False
 
+# Adapt for your folders
+folders_n_tracks = [  # Numbers of tracks in each folder (can't find a "play random in tracks" function for RDFPlayer)
+None, # 0 (unused)
+7, # 01
+11,
+3, # 03
+6,
+3, # 05
+2,
+3, # 07
+0,
+8,
+13 # 10 (messages)
+]
 
 def rotary():
     i = 0
@@ -87,6 +101,6 @@ while True :
         if rotary_value == 10:
             df.play(98,1) # Vous avez un nouveau message
             utime.sleep_ms(2000)
-        df.play(rotary_value, randint_between(1,3))
+        df.play(rotary_value, randint_between(1,folders_n_tracks[rotary_value]))
     utime.sleep_ms(250)
 
