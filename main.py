@@ -84,6 +84,9 @@ while True :
     rotary_value = rotary()
     if rotary_value :
         print(rotary_value)
+        if rotary_value == 10:
+            df.play(98,1) # Vous avez un nouveau message
+            utime.sleep_ms(2000)
         df.play(rotary_value, randint_between(1,3))
     utime.sleep_ms(250)
 
