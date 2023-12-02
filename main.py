@@ -53,6 +53,21 @@ def rotary():
         else:
             return None if i == 0 else i
 
+def randint_between(a, b):
+    if a > b:
+        raise ValueError("La valeur de 'a' doit être inférieure ou égale à 'b'")
+    num_values = b - a + 1
+    if num_values <= 0:
+        raise ValueError("La plage [a, b] est invalide")
+    num_bits = 0
+    while (1 << num_bits) < num_values:
+        num_bits += 1
+    random_bits = getrandbits(num_bits)
+    while random_bits >= num_values:
+        random_bits = getrandbits(num_bits)
+    result = random_bits + a
+    return result
+
 while True :
     #do_connect(WIFI_SSID, WIFI_PASSWORD)      
 
@@ -69,6 +84,6 @@ while True :
     rotary_value = rotary()
     if rotary_value :
         print(rotary_value)
-        df.play(rotary_value, 1)
+        df.play(rotary_value, randint_between(1,3))
     utime.sleep_ms(250)
 
