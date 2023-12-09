@@ -32,7 +32,7 @@ NodeMCU **D5** : Cadran fil bleu (cf. infra) - Indique si on touche le cadran
 
 NodeMCU **D6** : Cadran fil rouge (cf. infra) - Renvoi les impulsions quand le cadran est relaché
 
-DFPlayer **DAC_L** : Haut-parleur du combiné, fil bleu clair (ajouter une resistance pour atténuer le volume).
+DFPlayer **SPK_2** : Haut-parleur du combiné, fil bleu clair (ajouter une resistance de 4,7k pour atténuer le volume (parasites possibles si resistance trop faible)). Tester également avec **DAC_L**.
 
 Ne pas oublier la **masse** pour le nodeMCU, DFPlayer, Haut-parleur (fil rouge (!)) et cadran (fils bleu-blanc et rouge-blanc).
 

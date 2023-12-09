@@ -32,7 +32,7 @@ client_id = mac
 print('MAC :', mac)
 
 df=DFPlayer(uart_id=1) # D4
-df.volume(30)
+df.volume(25)
 
 
 hangup_pin = Pin(5,Pin.IN, Pin.PULL_UP) # D1
@@ -44,14 +44,14 @@ previous_state = False
 # Adapt for your folders
 folders_n_tracks = [  # Numbers of tracks in each folder (can't find a "play random in tracks" function for RDFPlayer)
 None, # 0 (unused)
-7, # 01
-11,
-3, # 03
+8, # 01
+13,
+2, # 03
 6,
-3, # 05
+4, # 05
 2,
 3, # 07
-0,
+3,
 8,
 13 # 10 (messages)
 ]
