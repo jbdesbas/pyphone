@@ -32,6 +32,8 @@ client_id = mac
 print('MAC :', mac)
 
 df=DFPlayer(uart_id=1) # D4
+df.volume(30)
+
 
 hangup_pin = Pin(5,Pin.IN, Pin.PULL_UP) # D1
 rotary1_pin = Pin(14, Pin.IN, Pin.PULL_UP) # D5
