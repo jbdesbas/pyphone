@@ -32,10 +32,11 @@ client_id = mac
 print('MAC :', mac)
 
 df=DFPlayer(uart_id=1) # D4
-df.volume(25)
+df.volume(26)
 
 
 hangup_pin = Pin(5,Pin.IN, Pin.PULL_UP) # D1
+busy_pin = Pin(4, Pin.IN, Pin.PULL_UP) # D2
 rotary1_pin = Pin(14, Pin.IN, Pin.PULL_UP) # D5
 rotary2_pin = Pin(12, Pin.IN, Pin.PULL_UP) # D6
 
@@ -55,6 +56,7 @@ None, # 0 (unused)
 8,
 13 # 10 (messages)
 ]
+
 
 def rotary():
     i = 0
@@ -84,14 +86,26 @@ def randint_between(a, b):
     result = random_bits + a
     return result
 
+idle_tick = 0
 while True :
     #do_connect(WIFI_SSID, WIFI_PASSWORD)      
 
     is_off_hook = hangup_pin.value() == 0
+    is_idle = busy_pin.value() == 1
     toggle = is_off_hook != previous_state
+
+    if is_idle and is_off_hook :
+        idle_tick+=1
+    else:
+        idle_tick = 0
+
     if is_off_hook and toggle:
         print('Pick Up!') 
         df.send_cmd(0x17,0x00, 99) # Loop folder 99. CF https://cahamo.delphidabbler.com/resources/dfplayer-mini
+    elif is_off_hook and idle_tick > 3 :
+        print('Tuuuut...')
+        df.send_cmd(0x17,0x00, 99) # Loop folder 99.
+        utime.sleep_ms(100)
     elif not is_off_hook and toggle:
         print('Hang Up..')
         df.stop()

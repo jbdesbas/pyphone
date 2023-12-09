@@ -26,6 +26,8 @@ Le cadran permet de choisir la piste à lire.
 
 NodeMCU **D1** : Combiné (0V si décroché, PULLUP si raccroché)
 
+NodeMCU **D2** : **BUSY** DFPlayer (Low si lecture en cours)
+
 NodeMCU **D4** : **RX** DFPlayer (Transmission de commande lecture/stop)
 
 NodeMCU **D5** : Cadran fil bleu (cf. infra) - Indique si on touche le cadran
