@@ -47,16 +47,26 @@ folders_n_tracks = [  # Numbers of tracks in each folder (can't find a "play ran
 None, # 0 (unused)
 8, # 01
 13,
-2, # 03
-6,
+6, # 03
+7,
 4, # 05
-2,
-3, # 07
 3,
+3, # 07
+6,
 8,
 13 # 10 (messages)
 ]
 
+available_tracks = []
+for e in folders_n_tracks : # Random play in folder, but don't play twice same tracks
+    if e or 0 > 0 :
+        available_tracks.append(list(range(1, e+1)))
+    else :
+        available_tracks.append(list())
+        
+
+def all_played_in_folder(folder):
+    available_tracks[folder] = list(range(1, folders_n_tracks[folder]+1))
 
 def rotary():
     i = 0
@@ -117,6 +127,10 @@ while True :
         if rotary_value == 10:
             df.play(98,1) # Vous avez un nouveau message
             utime.sleep_ms(2000)
-        df.play(rotary_value, randint_between(1,folders_n_tracks[rotary_value]))
+        n_track = available_tracks[rotary_value][ randint_between(1,len(available_tracks[rotary_value]))-1 ]
+        available_tracks[rotary_value].remove(n_track)
+        if len(available_tracks[rotary_value]) == 0:
+            all_played_in_folder(rotary_value) # reset folder
+        df.play(rotary_value, n_track ) # Play random song not already played
     utime.sleep_ms(250)
 
