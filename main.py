@@ -1,5 +1,5 @@
 import network
-from machine import RTC, I2C, Pin, unique_id, reset
+from machine import RTC, I2C, Pin, unique_id, reset, WDT
 from config import *
 import ubinascii
 import utime
@@ -26,6 +26,8 @@ wlan = network.WLAN(network.STA_IF)
 wlan.active(False) # No wifi needed
 
 rtc = RTC()
+
+wdt = WDT() # Init watchdog timer. On ESP8266 timeout is
 
 mac = ubinascii.hexlify(network.WLAN().config('mac'),':').decode() #client id ?
 client_id = mac
@@ -63,7 +65,7 @@ for e in folders_n_tracks : # Random play in folder, but don't play twice same t
         available_tracks.append(list(range(1, e+1)))
     else :
         available_tracks.append(list())
-        
+ 
 
 def all_played_in_folder(folder):
     available_tracks[folder] = list(range(1, folders_n_tracks[folder]+1))
@@ -78,6 +80,7 @@ def rotary():
                 i+=1
             previous_value = value
             utime.sleep_ms(10)
+            wdt.feed()
         else:
             return None if i == 0 else i
 
@@ -98,8 +101,6 @@ def randint_between(a, b):
 
 idle_tick = 0
 while True :
-    #do_connect(WIFI_SSID, WIFI_PASSWORD)      
-
     is_off_hook = hangup_pin.value() == 0
     is_idle = busy_pin.value() == 1
     toggle = is_off_hook != previous_state
@@ -126,11 +127,14 @@ while True :
         print(rotary_value)
         if rotary_value == 10:
             df.play(98,1) # Vous avez un nouveau message
-            utime.sleep_ms(2000)
+            for t in range(0,10) : # sleep for 2 seconds (200*10) ("vous avez un message" duration)
+                utime.sleep_ms(200)
+                wdt.feed()
         n_track = available_tracks[rotary_value][ randint_between(1,len(available_tracks[rotary_value]))-1 ]
         available_tracks[rotary_value].remove(n_track)
         if len(available_tracks[rotary_value]) == 0:
             all_played_in_folder(rotary_value) # reset folder
         df.play(rotary_value, n_track ) # Play random song not already played
+    wdt.feed()
     utime.sleep_ms(250)
 
