@@ -1,0 +1,135 @@
+esphome:
+  name: playphone
+  comment: Téléphone compteur d'histoire
+  on_boot:
+    priority: 600
+    then:
+      - delay: 2s
+      - dfplayer.set_volume:
+          volume: 20
+
+
+esp8266:
+  board: nodemcuv2
+
+uart:
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+  baud_rate: 9600
+
+# Enable logging
+logger:
+  baud_rate: 0 #Disable UART logging
+
+# Enable Home Assistant API
+api:
+    encryption:
+        key: !secret co2_esp_api_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  min_auth_mode: WPA2
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "CO2 Esp Fallback Hotspot"
+    password: !secret ap_password
+    
+captive_portal:
+
+
+dfplayer:
+  on_finished_playback:
+    then:
+      - logger.log: "Lecture terminée"
+      - if:
+          condition:
+            lambda: |-
+              return !id(hangup).state == false;
+          then:
+            - dfplayer.play_folder:
+                folder: 99
+                loop: true
+
+
+binary_sensor:
+  - platform: gpio
+    id: rotary_active
+    name: "rotary active"
+    pin:
+      number: 14
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    filters:
+      - delayed_on: 10ms
+    on_press: #début de la rotation
+      then:
+       - pulse_meter.set_total_pulses:
+          id: mypulse_meter
+          value: 0
+    on_release: # fin de la rotation
+      then:
+      - logger.log:
+          format: "Select %.0f"
+          args: [ 'id(mytotal).state' ]
+          level: INFO
+      - dfplayer.play_folder:
+          folder: !lambda 'return (int) id(mytotal).state;'
+          file: !lambda |-
+                int folder = (int) id(mytotal).state;
+
+                int tracks[11] = {
+                  0,
+                  8, 13, 6, 7, 4, 3, 3, 6, 8, 13
+                };
+
+                int max_tracks = tracks[folder];
+
+                if (max_tracks <= 0) return 1;
+
+                int r = random(1, max_tracks + 1);
+
+                ESP_LOGI("dfplayer", "Folder %d -> track %d/%d", folder, r, max_tracks);
+
+                return r;
+          
+  - platform: gpio
+    id: hangup
+    name: "Hangup"
+    pin:
+      number: 5
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    filters:
+      - delayed_on: 10ms
+    on_release: # Raccroche
+      then:
+        - dfplayer.stop
+    on_press: # Décroche
+      then:
+        - dfplayer.play_folder:
+            folder: 99
+            loop: true
+
+sensor:
+  - platform: pulse_meter
+    id: mypulse_meter
+    name: "Pulse meter"
+    internal_filter: 10ms
+    timeout: 500ms
+    total:
+      name: "Total Pulses"
+      id: mytotal
+    pin:
+      number: 12
+      mode:
+        input: true
+        pullup: true
+
