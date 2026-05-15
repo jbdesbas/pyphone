@@ -1,6 +1,8 @@
 esphome:
   name: playphone
   comment: Téléphone compteur d'histoire
+  platformio_options:
+    board_build.filesystem: littlefs
   on_boot:
     priority: 600
     then:
@@ -8,7 +10,20 @@ esphome:
       - media_player.volume_set:
           id: phone_player
           volume: 0.15
+      - media_player.volume_set:
+          id: web_player
+          volume: 0.02
+      - media_player.repeat_one:
+          id: phone_player
 
+
+audio_file:
+  - id: beep
+    file: playphone_wave/001_occupe.wav
+
+media_source:
+  - platform: audio_file
+    id: file_source
 
 esp32:
   board: esp32-s3-devkitc-1
@@ -63,11 +78,20 @@ speaker:
 # =========================
 
 media_player:
-  - platform: speaker
+  - platform: speaker_source
     name: "Phone Player"
     id: phone_player
-    volume_min: 0.05
     volume_max: 0.3
+    media_pipeline:
+      speaker: phone_speaker
+      sources:
+        - file_source
+    #announcement_pipeline:
+    #  speaker: phone_speaker      
+
+  - platform: speaker
+    id: web_player
+    name: "Music Player"
     announcement_pipeline:
       speaker: phone_speaker
 
@@ -102,6 +126,11 @@ binary_sensor:
           format: "Select %.0f"
           args: [ 'id(mytotal).state' ]
           level: INFO
+      - media_player.stop:
+            id: phone_player
+      - media_player.play_media:
+           id: web_player
+           media_url: "http://playphone.desbas.fr/07/002_au_claire_de_la_lune.wav"
       # lire un fichier sur le serveur
           
   - platform: gpio
@@ -117,14 +146,19 @@ binary_sensor:
       - delayed_on: 10ms
     on_release: # Raccroche
       then:
-        - media_player.stop
+        - media_player.stop:
+            id: web_player
+        - media_player.stop:
+            id: phone_player
         - lambda: |-
               id(reading_intro) = false;
     on_press: # Décroche
       then:
         - media_player.play_media:
+            media_url: "audio-file://beep"
             id: phone_player
-            media_url: "http://playphone.desbas.fr/07/002_au_claire_de_la_lune.wav"
+
+
 
 sensor:
   - platform: pulse_meter
