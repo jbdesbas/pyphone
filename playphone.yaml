@@ -5,21 +5,23 @@ esphome:
     priority: 600
     then:
       - delay: 2s
-      - dfplayer.set_volume:
-          volume: 20
+      - media_player.volume_set:
+          id: phone_player
+          volume: 0.15
 
 
-esp8266:
-  board: nodemcuv2
+esp32:
+  board: esp32-s3-devkitc-1
 
-uart:
-  tx_pin: GPIO1
-  rx_pin: GPIO3
-  baud_rate: 9600
+psram:
+  mode: octal
+  speed: 80MHz
+
+
 
 # Enable logging
 logger:
-  baud_rate: 0 #Disable UART logging
+
 
 # Enable Home Assistant API
 api:
@@ -32,27 +34,49 @@ ota:
 
 wifi:
   min_auth_mode: WPA2
+  power_save_mode: none
   ssid: !secret wifi_ssid
   password: !secret wifi_password
-  ap:
-    ssid: "CO2 Esp Fallback Hotspot"
-    password: !secret ap_password
-    
-captive_portal:
+
+# =========================
+# I2S
+# =========================
+
+i2s_audio:
+  - id: i2s_out
+    i2s_lrclk_pin: GPIO11
+    i2s_bclk_pin: GPIO10
+
+# =========================
+# MAX98357A
+# =========================
+
+speaker:
+  - platform: i2s_audio
+    id: phone_speaker
+    dac_type: external
+    i2s_dout_pin: GPIO12
+    channel: mono
+
+# =========================
+# Media Player
+# =========================
+
+media_player:
+  - platform: speaker
+    name: "Phone Player"
+    id: phone_player
+    volume_min: 0.05
+    volume_max: 0.3
+    announcement_pipeline:
+      speaker: phone_speaker
 
 
-dfplayer:
-  on_finished_playback:
-    then:
-      - logger.log: "Lecture terminée"
-      - if:
-          condition:
-            lambda: |-
-              return !id(hangup).state == false;
-          then:
-            - dfplayer.play_folder:
-                folder: 99
-                loop: true
+
+globals:
+  - id: reading_intro
+    type: bool
+    initial_value: 'false'
 
 
 binary_sensor:
@@ -60,7 +84,7 @@ binary_sensor:
     id: rotary_active
     name: "rotary active"
     pin:
-      number: 14
+      number: GPIO4
       inverted: true
       mode:
         input: true
@@ -78,31 +102,13 @@ binary_sensor:
           format: "Select %.0f"
           args: [ 'id(mytotal).state' ]
           level: INFO
-      - dfplayer.play_folder:
-          folder: !lambda 'return (int) id(mytotal).state;'
-          file: !lambda |-
-                int folder = (int) id(mytotal).state;
-
-                int tracks[11] = {
-                  0,
-                  8, 13, 6, 7, 4, 3, 3, 6, 8, 13
-                };
-
-                int max_tracks = tracks[folder];
-
-                if (max_tracks <= 0) return 1;
-
-                int r = random(1, max_tracks + 1);
-
-                ESP_LOGI("dfplayer", "Folder %d -> track %d/%d", folder, r, max_tracks);
-
-                return r;
+      # lire un fichier sur le serveur
           
   - platform: gpio
     id: hangup
     name: "Hangup"
     pin:
-      number: 5
+      number: GPIO5
       inverted: true
       mode:
         input: true
@@ -111,12 +117,14 @@ binary_sensor:
       - delayed_on: 10ms
     on_release: # Raccroche
       then:
-        - dfplayer.stop
+        - media_player.stop
+        - lambda: |-
+              id(reading_intro) = false;
     on_press: # Décroche
       then:
-        - dfplayer.play_folder:
-            folder: 99
-            loop: true
+        - media_player.play_media:
+            id: phone_player
+            media_url: "http://playphone.desbas.fr/07/002_au_claire_de_la_lune.wav"
 
 sensor:
   - platform: pulse_meter
@@ -128,7 +136,7 @@ sensor:
       name: "Total Pulses"
       id: mytotal
     pin:
-      number: 12
+      number: GPIO6
       mode:
         input: true
         pullup: true
