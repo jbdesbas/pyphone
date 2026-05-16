@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse,StreamingResponse
 from pathlib import Path
 from dotenv import load_dotenv
 import random
@@ -8,17 +8,18 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import wave
 from piper import PiperVoice
-
+import numpy as np
 
 
 load_dotenv()
 
 BASE_DIR = Path(getenv("BASE_DIR"))
+SAMPLE_RATE = 12e3 # Passer à 8Khz si probleme de lecture sur esp32
 
 app = FastAPI()
 
-#model_name = "fr_FR-gilles-low.onnx"
-model_name = "fr_FR-mls-medium.onnx"
+model_name = "fr_FR-gilles-low.onnx"
+#model_name = "fr_FR-mls-medium.onnx"
 
 voice = PiperVoice.load("synth_models/"+model_name)
 tz = ZoneInfo("Europe/Paris")
@@ -49,18 +50,18 @@ def random_music(folder: str):
     )
 
 
-    
-    
 def generate_voice():
     now = datetime.now(tz)
 
     hour = now.hour
     minute = now.minute
 
-    with wave.open("synth.wav", "wb") as wav_file: # TODO convertire en wav 8khz
-        voice.synthesize_wav(f"Il est {hour} heures {minute}. C'est bientôt l'heure de se coucher pour Lily et Garance!", wav_file)
-    
-    return "synth.wav"  
+    with wave.open("synth.wav", "wb") as wf: # TODO convertire en wav 8khz
+        voice.synthesize_wav(f"Il est {hour} heures {minute}. C'est bientôt l'heure de se coucher pour Lily et Garance.", wf)
+  
+    outfile = process_file("synth.wav", sample_rate=SAMPLE_RATE)
+
+    return outfile  
   
 def get_random_file(folder):
     target = BASE_DIR / folder
@@ -76,6 +77,43 @@ def get_random_file(folder):
     
     return selected
 
+
+    
+    
+def process_file(input_file, sample_rate=8e3): # Préparer un fichier pour stream sur ESP32
+    output = "ready.wav"
+    
+    def resample(pcm_bytes: bytes, src_rate: int, dst_rate: int, sampwidth: int) -> bytes:
+        """ IA Generated """
+        dtype = np.int16 if sampwidth == 2 else np.int8
+        samples = np.frombuffer(pcm_bytes, dtype=dtype)
+        num_out = int(len(samples) * dst_rate / src_rate)
+        resampled = np.interp(
+            np.linspace(0, len(samples), num_out),
+            np.arange(len(samples)),
+            samples
+        ).astype(dtype)
+        
+        return resampled.tobytes()
+
+    #RE-ECRIRE le fichier à 8KHZ
+    with wave.open(input_file, "rb") as wf:
+        src_rate = wf.getframerate()
+        n_channels = wf.getnchannels()
+        sampwidth = wf.getsampwidth()
+        pcm_data = wf.readframes(wf.getnframes())
+
+    pcm_resampled = resample(pcm_data, src_rate, sample_rate, sampwidth)
+
+    # Réécrire un WAV propre à 8000 Hz
+    with wave.open(output, "wb") as wf:
+        wf.setnchannels(n_channels)
+        wf.setsampwidth(sampwidth)
+        wf.setframerate(sample_rate)
+        wf.writeframes(pcm_resampled)
+        
+    return output
+    
 if __name__ == "__main__":
     import uvicorn
 
