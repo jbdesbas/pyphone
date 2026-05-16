@@ -40,3 +40,14 @@ def random_music(folder: str):
         media_type="audio/wav",
         filename=selected.name
     )
+    
+    
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "main:app",
+        host="localhost",
+        port=8000,
+        reload=True
+    )
