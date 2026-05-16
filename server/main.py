@@ -13,7 +13,7 @@ from sentences import sentence_now
 load_dotenv()
 
 BASE_DIR = Path(getenv("BASE_DIR"))
-SAMPLE_RATE = 12e3 # Passer à 8Khz si probleme de lecture sur esp32
+SAMPLE_RATE = 8e3
 
 app = FastAPI()
 
