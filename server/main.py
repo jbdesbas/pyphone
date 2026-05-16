@@ -4,12 +4,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 import random
 from os import getenv
-from datetime import datetime
-from zoneinfo import ZoneInfo
 import wave
 from piper import PiperVoice
 import numpy as np
 
+from sentences import sentence_now
 
 load_dotenv()
 
@@ -22,7 +21,7 @@ model_name = "fr_FR-gilles-low.onnx"
 #model_name = "fr_FR-mls-medium.onnx"
 
 voice = PiperVoice.load("synth_models/"+model_name)
-tz = ZoneInfo("Europe/Paris")
+
 
 
 @app.get("/sound/{folder}.wav")
@@ -51,13 +50,9 @@ def random_music(folder: str):
 
 
 def generate_voice():
-    now = datetime.now(tz)
-
-    hour = now.hour
-    minute = now.minute
-
-    with wave.open("synth.wav", "wb") as wf: # TODO convertire en wav 8khz
-        voice.synthesize_wav(f"Il est {hour} heures {minute}. C'est bientôt l'heure de se coucher pour Lily et Garance.", wf)
+    text = sentence_now()
+    with wave.open("synth.wav", "wb") as wf:
+        voice.synthesize_wav(text, wf)
   
     outfile = process_file("synth.wav", sample_rate=SAMPLE_RATE)
 
