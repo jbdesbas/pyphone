@@ -58,9 +58,9 @@ def generate_voice():
     with wave.open("synth.wav", "wb") as wf:
         voice.synthesize_wav(text, wf)
   
-    #outfile = process_file("synth.wav", sample_rate=SAMPLE_RATE)
-    return "synth.wav"
-    #return outfile  
+    outfile = process_file("synth.wav", sample_rate=SAMPLE_RATE)
+    #return "synth.wav"
+    return outfile  
   
 def get_random_file(folder):
     target = BASE_DIR / folder
