@@ -1,5 +1,7 @@
+from time import sleep
+
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse,StreamingResponse
+from fastapi.responses import FileResponse
 from pathlib import Path
 from dotenv import load_dotenv
 import random
@@ -8,7 +10,7 @@ import wave
 from piper import PiperVoice
 import numpy as np
 
-from sentences import sentence_now
+from sentences import chooser
 
 load_dotenv()
 
@@ -22,6 +24,7 @@ model_name = "fr_FR-gilles-low.onnx"
 
 voice = PiperVoice.load("synth_models/"+model_name)
 
+sentence_chooser = chooser
 
 
 @app.get("/sound/{folder}.wav")
@@ -50,13 +53,14 @@ def random_music(folder: str):
 
 
 def generate_voice():
-    text = sentence_now()
+    text = sentence_chooser.choose()
+    print("say: ", text)
     with wave.open("synth.wav", "wb") as wf:
         voice.synthesize_wav(text, wf)
   
-    outfile = process_file("synth.wav", sample_rate=SAMPLE_RATE)
-
-    return outfile  
+    #outfile = process_file("synth.wav", sample_rate=SAMPLE_RATE)
+    return "synth.wav"
+    #return outfile  
   
 def get_random_file(folder):
     target = BASE_DIR / folder
@@ -106,7 +110,7 @@ def process_file(input_file, sample_rate=8e3): # Préparer un fichier pour strea
         wf.setsampwidth(sampwidth)
         wf.setframerate(sample_rate)
         wf.writeframes(pcm_resampled)
-        
+    
     return output
     
 if __name__ == "__main__":
@@ -116,5 +120,6 @@ if __name__ == "__main__":
         "main:app",
         host="localhost",
         port=8000,
-        reload=True
+        reload=True,
+        workers=1
     )
