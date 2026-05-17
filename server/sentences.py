@@ -74,8 +74,12 @@ Sentence(
     lambda: time(19, 30) <= now().time() < time(20, 30)
 ),
 Sentence(
-    lambda: f"il est {now().hour} heure {now().minute}. grance et lily devrai déjà être couché.",
+    lambda: f"il est {now().hour} heure {now().minute}. garance et lily devrai déjà être couché.",
     lambda: time(20, 30) <= now().time() < time(4, 0)
+),
+Sentence(
+    lambda: f"il est {now().hour} heure {now().minute}. Passé une bonne apré midi.",
+    lambda: time(13, 0) <= now().time() < time(16, 0)
 ),
 Sentence(
     lambda: f"avé vous pri le gouté ?",
