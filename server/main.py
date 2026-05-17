@@ -7,12 +7,10 @@ from dotenv import load_dotenv
 import random
 from os import getenv
 import wave
-from fastapi_cache import FastAPICache
-from fastapi_cache.backends.inmemory import InMemoryBackend
 from piper import PiperVoice
 import numpy as np
-from fastapi_cache.decorator import cache
 from sentences import chooser
+from fast_cache import cache, InMemoryBackend
 
 load_dotenv()
 
@@ -20,13 +18,12 @@ BASE_DIR = Path(getenv("BASE_DIR"))
 SAMPLE_RATE = 8e3
 
 
-@asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    FastAPICache.init(InMemoryBackend())
-    yield
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
+
+backend = InMemoryBackend()
+cache.init_app(app, backend)
 
 model_name = "fr_FR-gilles-low.onnx"
 #model_name = "fr_FR-mls-medium.onnx"
@@ -36,14 +33,11 @@ voice = PiperVoice.load("synth_models/"+model_name)
 sentence_chooser = chooser
 
 
-@cache(expire=1)
-async def cached_generate_voice():
-    return generate_voice()
-
 
 @app.get("/sound/{folder}.wav")
 @app.get("/sound/{folder}")
-async def random_music(folder: str):
+@cache.cached(expire=3)
+def random_music(folder: str):
     """
     Retourne un fichier audio WAV aléatoire dans un dossier donné.
 
@@ -56,7 +50,7 @@ async def random_music(folder: str):
 
         
     if folder == '01':
-        outfile = await cached_generate_voice()
+        outfile = generate_voice()
     else:
         outfile = get_random_file(folder)
         
@@ -130,6 +124,7 @@ def process_file(input_file, sample_rate=8e3): # Préparer un fichier pour strea
         wf.setsampwidth(sampwidth)
         wf.setframerate(sample_rate)
         wf.writeframes(pcm_resampled)
+        wf.writeframes(b"\x00\x00" * 8000) # ajout une seconde de silence
     
     return output
     
