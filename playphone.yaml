@@ -58,6 +58,10 @@ wifi:
   password: !secret wifi_password
 
 
+
+http_request:
+  verify_ssl: false
+
 # =========================
 # I2S
 # =========================
@@ -108,6 +112,21 @@ globals:
     initial_value: 'false'
 
 
+
+
+text_sensor:
+  - platform: wifi_info
+    mac_address:
+      internal: true
+      id: mac_address_sensor
+  - platform: template
+    internal: true
+    id: device_id_sensor
+    lambda: |-
+      std::string mac = id(mac_address_sensor).state;
+      mac.erase(std::remove(mac.begin(), mac.end(), ':'), mac.end());
+      return mac;
+
 binary_sensor:
   - platform: gpio
     id: rotary_active
@@ -137,7 +156,10 @@ binary_sensor:
       - media_player.play_media:
            id: web_player
            media_url: !lambda |-
-                      return "http://coyote.lan:3233/sound/0" + std::to_string((int) id(mytotal).state);
+                          return "http://coyote.lan:3233/sound/0"
+                                 + std::to_string((int) id(mytotal).state)
+                                 + "?key="
+                                 + id(device_id_sensor).state;
 
   - platform: gpio
     id: hangup
@@ -154,6 +176,10 @@ binary_sensor:
       then:
         - media_player.stop:
             id: web_player
+        - http_request.get:
+            url: !lambda |-
+              return std::string("http://coyote.lan:3233/hangup?key=")
+                     + id(device_id_sensor).state;
         - delay: 100ms
         - media_player.stop:
             id: phone_player
@@ -164,6 +190,10 @@ binary_sensor:
         - media_player.play_media:
             media_url: "audio-file://beep"
             id: phone_player
+        - http_request.get:
+            url: !lambda |-
+              return std::string("http://coyote.lan:3233/pickup?key=")
+                     + id(device_id_sensor).state;
 
 
 
