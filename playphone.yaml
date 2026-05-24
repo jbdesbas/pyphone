@@ -158,7 +158,7 @@ binary_sensor:
            media_url: !lambda |-
                           return "http://coyote.lan:3233/sound/0"
                                  + std::to_string((int) id(mytotal).state)
-                                 + "?key="
+                                 + "?device_key="
                                  + id(device_id_sensor).state;
 
   - platform: gpio
@@ -178,7 +178,7 @@ binary_sensor:
             id: web_player
         - http_request.get:
             url: !lambda |-
-              return std::string("http://coyote.lan:3233/hangup?key=")
+              return std::string("http://coyote.lan:3233/hangup?device_key=")
                      + id(device_id_sensor).state;
         - delay: 100ms
         - media_player.stop:
@@ -192,7 +192,7 @@ binary_sensor:
             id: phone_player
         - http_request.get:
             url: !lambda |-
-              return std::string("http://coyote.lan:3233/pickup?key=")
+              return std::string("http://coyote.lan:3233/pickup?device_key=")
                      + id(device_id_sensor).state;
 
 

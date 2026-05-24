@@ -10,6 +10,7 @@ import wave
 from piper import PiperVoice
 import numpy as np
 from sentences import chooser
+from menu import handle_menu
 from fast_cache import cache, InMemoryBackend
 
 load_dotenv()
@@ -33,11 +34,13 @@ voice = PiperVoice.load("synth_models/"+model_name)
 sentence_chooser = chooser
 
 
+sessions = {} # mono worker only
+
 
 @app.get("/sound/{folder}.wav")
 @app.get("/sound/{folder}")
 @cache.cached(expire=3)
-def random_music(folder: str):
+def random_music(folder: str, device_key: str):
     """
     Retourne un fichier audio WAV aléatoire dans un dossier donné.
 
@@ -48,12 +51,19 @@ def random_music(folder: str):
     if folder.endswith(".wav"):
         folder = folder[:-4]
 
+    session = sessions.get(device_key)
+    state = session.get("state") if session else None
+    if folder == '01' or state is not None :
+        #outfile = generate_voice()  # random sentence
         
-    if folder == '01':
-        outfile = generate_voice()
+        menu = handle_menu(state, folder)
+        outfile = generate_voice(menu.get("sentence")) if menu.get("sentence") else menu.get('audio_file')
+        sessions.setdefault(
+            device_key,
+            {"state": menu.get("state")}
+        )
     else:
         outfile = get_random_file(folder)
-        
     return FileResponse(
         outfile,
         media_type="audio/wav"
@@ -66,11 +76,20 @@ def test():
         media_type="audio/wav"
     )
 
-def generate_voice():
-    text = sentence_chooser.choose()
-    print("say: ", text)
+@app.get("/hangup")
+def hangup(device_key: str):
+    sessions.pop(device_key, None)
+    return {"ok": True}
+
+def generate_voice(text: str | None = None):  
+    if text is not None:
+        sentence = text
+    else:
+        sentence = sentence_chooser.choose()
+    
+    print("say: ", sentence)
     with wave.open("synth.wav", "wb") as wf:
-        voice.synthesize_wav(text, wf)
+        voice.synthesize_wav(sentence, wf)
   
     outfile = process_file("synth.wav", sample_rate=SAMPLE_RATE)
     #return "synth.wav"
