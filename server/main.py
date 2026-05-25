@@ -19,7 +19,7 @@ from menu import handle_menu
 load_dotenv()
 
 BASE_DIR = Path(getenv("BASE_DIR"))
-SAMPLE_RATE = 8e3
+SAMPLE_RATE = 8_000
 
 
 
