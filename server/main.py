@@ -66,7 +66,7 @@ def random_music(folder: str, device_key: str):
             {"state": menu.get("state")}
         )
     else:
-        buffer = get_random_file('10' if folder=="00" else folder)
+        buffer = get_random_file('00' if folder=="10" else folder)
     return StreamingResponse(
         buffer,
         media_type="audio/wav"
@@ -111,7 +111,7 @@ def generate_voice(text: str | None = None):
     return out_buffer  
   
 def get_random_file(folder):
-    target = BASE_DIR / folder
+    target = BASE_DIR / str(int(folder)).zfill(2)
     if not target.exists() or not target.is_dir():
         raise HTTPException(status_code=404)
 

@@ -156,7 +156,7 @@ binary_sensor:
       - media_player.play_media:
            id: web_player
            media_url: !lambda |-
-                          return "http://coyote.lan:3233/sound/0"
+                          return "http://coyote.lan:3233/sound/"
                                  + std::to_string((int) id(mytotal).state)
                                  + "?device_key="
                                  + id(device_id_sensor).state;
