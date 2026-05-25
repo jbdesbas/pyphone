@@ -15,3 +15,5 @@ def handle_menu(state: str, key: str | None = None):
             podcast = LesDentsEtDodo()
             buffer = podcast.getBuffer()
             return dict(state="podcast", audio_file=buffer)
+        
+    return dict(state="main", sentence=f"Le numéro {int(key)} n'est pas encore disponible.")
