@@ -73,10 +73,18 @@ def random_music(folder: str, device_key: str):
     )
 
 
+# Raccroche le téléphone
 @app.get("/hangup")
 def hangup(device_key: str):
     sessions.pop(device_key, None)
     return {"ok": True}
+
+
+# Décroche le téléphone
+@app.get("/pickup")
+def pickup():
+    return {"ok": True}
+
 
 def generate_voice(text: str | None = None):  
     if text is not None:
