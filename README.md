@@ -11,8 +11,8 @@ Le cadran permet de choisir la piste à lire.
 ### Hardware
 
 
-- ESP8266-12F (Nodemcu) flashée avec [MicroPython](https://micropython.org)
-- [DFPlayer mini](https://wiki.dfrobot.com/DFPlayer_Mini_SKU_DFR0299) + carte Micro SD
+- ESP32-S3 (avec PSRAM).
+- Amplificateur I2S MAX98357A.
 
 
 ### Software
@@ -21,49 +21,34 @@ Le projet utilise [ESPHome](https://esphome.io/) pour générer le firmware de l
 
 ## Montage
 
-NodeMCU **D1** : Combiné (0V si décroché, PULLUP si raccroché)
+ESP32 **GPIO5** : Combiné (0V si décroché, PULLUP si raccroché)
 
-NodeMCU **TX** : **RX** DFPlayer (Retour d'information)
+ESP32 **GPIO10** : MAX98357A - BCLK
 
-NodeMCU **TX** : **RX** DFPlayer (Transmission de commande lecture/stop)
+ESP32 **GPIO11** : MAX98357A - LRC
 
-NodeMCU **D5** : Cadran fil bleu (cf. infra) - Indique si on touche le cadran
+ESP32 **GPIO12** : MAX98357A - DIN
 
-NodeMCU **D6** : Cadran fil rouge (cf. infra) - Renvoi les impulsions quand le cadran est relaché
+ESP32 **GPIO4** : Cadran fil bleu (cf. infra) - Indique si on touche le cadran
 
-DFPlayer **SPK_2** : Haut-parleur du combiné, fil bleu clair (ajouter une resistance de 4,7k pour atténuer le volume (parasites possibles si resistance trop faible)). Tester également avec **DAC_L**.
+ESP32 **GPIO6** : Cadran fil rouge (cf. infra) - Renvoi les impulsions quand le cadran est relaché
 
-Ne pas oublier la **masse** pour le nodeMCU, DFPlayer, Haut-parleur (fil rouge (!)) et cadran (fils bleu-blanc et rouge-blanc).
 
-## Carde SD
+## Serveur
 
-Arborescence : 
+Serveur FastAPI. Il permet de renvoyer les fichires sons (statiques) mais aussi des générer des phrases avec PiperVoice.
 
-Les répertoires 001 à 010 correspondent au numéro choisi sur le cadran (`010` pour le zéro).
-Le répartoire `099` est lu en boucle lorsque le combiné est décroché (tonalité d'attente).
+L'ESP-32 transmet au serveur : les actions le combiné (_hangup_ / _pickup_) et le numéro choisi sur le cadran (1 à 10).
 
-Seul le canal gauche est envoyé au combiné.
+Pour ne pas surcharger l'ESP32,le serveur stream en wav, 8khz, mono.
 
-```
-.
-├── 001/
-│   ├── 001_title.mp3
-│   ├── 002_title.mp3
-│   └── 003_title.mp3
-├── 002/
-│   ├── 001_title.mp3
-│   ├── 002_title.mp3
-│   └── 003_title.mp3
-├── ...
-├── 010/
-│   ├── 001_title.mp3
-│   ├── 002_title.mp3
-│   └── 003_title.mp3
-├── 098/
-│   └── 001_nouveau_message.mp3
-└── 099/
-    └── 001_waiting_tone.mp3
-```
+Fonctionnalités :
+- Stream
+- Serveur Vocal Interactif
+- Génération de phrase aléatoires
+
+TODO : image docker à construire.
+
 
 
 ## Cadran
