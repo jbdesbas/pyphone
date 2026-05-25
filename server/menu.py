@@ -1,7 +1,7 @@
 from sentences import now
 from stream import LesDentsEtDodo, convert_mp3_url_to_wav
 
-#devnote : pour l'info du jour, utiliser : https://api.playbacpresse.fr/articles?newspaper=lepq&limit=5
+#devnote : pour l'info du jour, utiliser : https://api.playbacpresse.fr/articles?newspaper=lepq&limit=5 ?
 
 def handle_menu(state: str, key: str | None = None):
 
@@ -13,6 +13,5 @@ def handle_menu(state: str, key: str | None = None):
             return dict(state="weather", sentence="""Voici la météo.""")
         if int(key) == 2:
             podcast = LesDentsEtDodo()
-            audio_file ="lesdentsetdodo.wav" 
-            podcast.getFile(audio_file)
-            return dict(state="podcast", audio_file=audio_file)
+            buffer = podcast.getBuffer()
+            return dict(state="podcast", audio_file=buffer)

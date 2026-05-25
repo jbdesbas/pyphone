@@ -1,10 +1,13 @@
 import requests
 import xml.etree.ElementTree as ET
 from pydub import AudioSegment
+import io
+import os
 
 class LesDentsEtDodo(object):
     def __init__(self):
         self.feedUrl = "https://feeds.simplecast.com/Y_A8bQt7"
+        self.buffer = io.BytesIO()
         pass
 
     def getIndex(self):
@@ -25,18 +28,23 @@ class LesDentsEtDodo(object):
 
         return None
     
-    def getFile(self, output):
+    def getBuffer(self):
+        tmp_file = 'temp_LesDentsEtDodo.mp3'
         response = requests.get(self.get_first_mp3_url())
     
-        with open('temp.mp3', 'wb') as f:
+        with open(tmp_file, 'wb') as f:
             f.write(response.content)
 
-        audio = AudioSegment.from_file('temp.mp3', format="mp3")
+        audio = AudioSegment.from_file(tmp_file, format="mp3")
         
         audio = audio.set_channels(1)
         audio = audio.set_frame_rate(8000)
         extract = audio[26.5*1e3:] - 8 # cut 26 first secondes, reduce volume
-        extract.export(output, format="wav")
+        extract.export(self.buffer, format="wav")
+
+        os.unlink(tmp_file)
+
+        return self.buffer
 
 
 

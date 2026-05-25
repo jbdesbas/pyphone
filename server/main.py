@@ -1,17 +1,20 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
-from contextlib import asynccontextmanager
-from typing import AsyncIterator
-from pathlib import Path
-from dotenv import load_dotenv
-import random
+import io
 from os import getenv
+import random
+from pathlib import Path
+
 import wave
+from dotenv import load_dotenv
+from pydub import AudioSegment
+from fast_cache import cache, InMemoryBackend
 from piper import PiperVoice
-import numpy as np
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
+
 from sentences import chooser
 from menu import handle_menu
-from fast_cache import cache, InMemoryBackend
+
 
 load_dotenv()
 
@@ -57,24 +60,18 @@ def random_music(folder: str, device_key: str):
         #outfile = generate_voice()  # random sentence
         
         menu = handle_menu(state, folder)
-        outfile = generate_voice(menu.get("sentence")) if menu.get("sentence") else menu.get('audio_file')
+        buffer = generate_voice(menu.get("sentence")) if menu.get("sentence") else menu.get('audio_file')
         sessions.setdefault(
             device_key,
             {"state": menu.get("state")}
         )
     else:
-        outfile = get_random_file(folder)
-    return FileResponse(
-        outfile,
+        buffer = get_random_file(folder)
+    return StreamingResponse(
+        buffer,
         media_type="audio/wav"
     )
 
-@app.get("/test")
-def test():
-    return FileResponse(
-        "ready.wav",
-        media_type="audio/wav"
-    )
 
 @app.get("/hangup")
 def hangup(device_key: str):
@@ -88,12 +85,22 @@ def generate_voice(text: str | None = None):
         sentence = sentence_chooser.choose()
     
     print("say: ", sentence)
-    with wave.open("synth.wav", "wb") as wf:
+
+    buffer = io.BytesIO()
+    
+    with wave.open(buffer, "wb") as wf:
         voice.synthesize_wav(sentence, wf)
-  
-    outfile = process_file("synth.wav", sample_rate=SAMPLE_RATE)
-    #return "synth.wav"
-    return outfile  
+
+    audio = AudioSegment.from_wav(buffer)
+    audio = audio.set_channels(1)       # Mono
+    audio = audio.set_frame_rate(SAMPLE_RATE)  # 8 kHz
+    audio += AudioSegment.silent(duration=1000)
+
+    out_buffer = io.BytesIO()
+    audio.export(out_buffer, format="wav")
+    out_buffer.seek(0)
+
+    return out_buffer  
   
 def get_random_file(folder):
     target = BASE_DIR / folder
@@ -106,47 +113,15 @@ def get_random_file(folder):
         raise HTTPException(status_code=404)
 
     selected = random.choice(files)
-    
-    return selected
 
+    audio = AudioSegment.from_wav(selected)
+    buffer = io.BytesIO()
+    audio.export(buffer, format="wav")
+    # Si besoin, on pourra ajouter ici un traitement pour préparer les fichiers pour l'ESP32
+    buffer.seek(0)
+    return buffer
+    
 
-    
-    
-def process_file(input_file, sample_rate=8e3): # Préparer un fichier pour stream sur ESP32
-    output = "ready.wav"
-    
-    def resample(pcm_bytes: bytes, src_rate: int, dst_rate: int, sampwidth: int) -> bytes:
-        """ IA Generated """
-        dtype = np.int16 if sampwidth == 2 else np.int8
-        samples = np.frombuffer(pcm_bytes, dtype=dtype)
-        num_out = int(len(samples) * dst_rate / src_rate)
-        resampled = np.interp(
-            np.linspace(0, len(samples), num_out),
-            np.arange(len(samples)),
-            samples
-        ).astype(dtype)
-        
-        return resampled.tobytes()
-
-    #RE-ECRIRE le fichier à 8KHZ
-    with wave.open(input_file, "rb") as wf:
-        src_rate = wf.getframerate()
-        n_channels = wf.getnchannels()
-        sampwidth = wf.getsampwidth()
-        pcm_data = wf.readframes(wf.getnframes())
-
-    pcm_resampled = resample(pcm_data, src_rate, sample_rate, sampwidth)
-
-    # Réécrire un WAV propre à 8000 Hz
-    with wave.open(output, "wb") as wf:
-        wf.setnchannels(n_channels)
-        wf.setsampwidth(sampwidth)
-        wf.setframerate(sample_rate)
-        wf.writeframes(pcm_resampled)
-        wf.writeframes(b"\x00\x00" * 8000) # ajout une seconde de silence
-    
-    return output
-    
 if __name__ == "__main__":
     import uvicorn
 
