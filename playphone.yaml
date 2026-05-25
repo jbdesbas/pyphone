@@ -202,6 +202,7 @@ sensor:
   - platform: pulse_meter
     id: mypulse_meter
     internal_filter: 10ms
+    internal_filter_mode: PULSE
     timeout: 500ms
     internal: true
     total:
