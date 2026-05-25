@@ -66,7 +66,7 @@ def random_music(folder: str, device_key: str):
             {"state": menu.get("state")}
         )
     else:
-        buffer = get_random_file(folder)
+        buffer = get_random_file('10' if folder=="00" else folder)
     return StreamingResponse(
         buffer,
         media_type="audio/wav"
