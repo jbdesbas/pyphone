@@ -68,6 +68,21 @@ chooser = SentenceChooser()
 # --------------------------------------------------
 # Custom sentences
 # --------------------------------------------------
+
+
+sentence_weather = Sentence(
+    lambda: (
+        lambda t: (
+            f"dehor il fai {round(t)} degré. "
+            + ("c'est glacial." if t < 0 else 
+               "pensé a mettre un pule" if t < 18 else
+               "il fé chaud." if t > 26 else
+               "c'est agréable.")
+        )
+    )(temperature()),
+    lambda: True
+)
+
 my_sentences = [
 Sentence(
     lambda: f"déja {now().hour} heure {now().minute}. c'est biento l'heure de se coucher pour lily et garance.",
@@ -101,16 +116,10 @@ Sentence(
     lambda: f"c'est {now().strftime('%A')}, passé une bonne journé.",
     lambda: time(6, 30) <= now().time() < time(8, 30)
 ),
-Sentence(
-    lambda: (
-        lambda t: (
-            f"dehor il fai {round(t)} degré. "
-            + ("c'est glacial." if t < 0 else "pensé a mettre un pule" if t < 18 else "c'est agréable.")
-        )
-    )(temperature()),
-    lambda: True
-),
+sentence_weather,
 ]
+
+
 
 for s in my_sentences:
     chooser.add(s)
