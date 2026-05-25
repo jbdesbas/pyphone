@@ -25,6 +25,18 @@ class LesDentsEtDodo(object):
 
         return None
     
+    def getFile(self, output):
+        response = requests.get(self.get_first_mp3_url())
+    
+        with open('temp.mp3', 'wb') as f:
+            f.write(response.content)
+
+        audio = AudioSegment.from_file('temp.mp3', format="mp3")
+        
+        audio = audio.set_channels(1)
+        audio = audio.set_frame_rate(8000)
+        extract = audio[26.5*1e3:] - 8 # cut 26 first secondes, reduce volume
+        extract.export(output, format="wav")
 
 
 

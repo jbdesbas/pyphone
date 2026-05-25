@@ -6,12 +6,13 @@ from stream import LesDentsEtDodo, convert_mp3_url_to_wav
 def handle_menu(state: str, key: str | None = None):
 
     if state is None:
-        return dict(state="main", sentence=f""" il est {now().hour} heure {now().minute}. Pour la météo, tapé 1. Pour la bonne nouvelle du jour, tapé 2.""")
+        return dict(state="main", sentence=f""" il est {now().hour} heure {now().minute}. 
+                    Pour la météo, tapé 1. Pour l'information du jour, tapé 2.""")
     if state == "main":
         if int(key) == 1:
             return dict(state="weather", sentence="""Voici la météo.""")
         if int(key) == 2:
             podcast = LesDentsEtDodo()
             audio_file ="lesdentsetdodo.wav" 
-            convert_mp3_url_to_wav(podcast.get_first_mp3_url(), audio_file)
+            podcast.getFile(audio_file)
             return dict(state="podcast", audio_file=audio_file)
