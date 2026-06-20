@@ -39,7 +39,7 @@ class LesDentsEtDodo(object):
         
         audio = audio.set_channels(1)
         audio = audio.set_frame_rate(8000)
-        extract = audio[26.5*1e3:] - 8 # cut 26 first secondes, reduce volume
+        extract = audio[26.5*1000:] - 2 # cut 26 first secondes, adjust volume
         extract.export(self.buffer, format="wav")
 
         os.unlink(tmp_file)
