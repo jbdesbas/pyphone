@@ -18,7 +18,7 @@ from menu import handle_menu
 
 load_dotenv()
 
-BASE_DIR = Path(getenv("BASE_DIR", getenv("SOUND_DIR")))
+BASE_DIR = Path(getenv("BASE_DIR", getenv("SOUND_DIR",'sound/')))
 
 if not BASE_DIR:
     raise RuntimeError("BASE_DIR ou SOUND_DIR doit être défini")
