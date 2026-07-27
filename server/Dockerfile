@@ -19,17 +19,17 @@ ENV LC_ALL=fr_FR.UTF-8
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY *.py ./
 
 # Copier le code de l'app
 COPY entrypoint.sh /entrypoint.sh
 
 RUN mkdir waves
-RUN echo "BASE_DIR=./waves" > .env
+#RUN echo "BASE_DIR=./waves" > .env
 
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
-EXPOSE 8000
+EXPOSE 3233
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3233"]
